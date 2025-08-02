@@ -1,0 +1,24 @@
+EcommerceSIDHAA/
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── routes.py
+│   │   └── utils.py
+│   ├── requirements.txt
+│   └── README.md
+├── frontend/
+│   ├── public/
+│   │   └── index.html
+│   ├── src/
+│   │   ├── App.js
+│   │   ├── index.js
+│   │   └── styles.css
+│   ├── package.json
+│   └── README.md
+├── infrastructure/
+│   ├── docker-compose.yml
+│   ├── nginx.conf
+│   └── README.md
+├── .gitignore
+└── README.md
