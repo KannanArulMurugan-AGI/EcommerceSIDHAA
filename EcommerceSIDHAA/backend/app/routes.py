@@ -55,6 +55,15 @@ def profile():
 
 @app.route('/products', methods=['POST'])
 def create_product():
+    # TODO: Add admin role authorization check
+    user_id = request.headers.get('x-user-id')
+    if not user_id:
+        return jsonify({'message': 'User ID is missing!'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found or invalid ID!'}), 401
+
     data = request.get_json()
     if not data or not 'name' in data or not 'price' in data:
         return jsonify({'message': 'Missing data'}), 400
@@ -103,6 +112,15 @@ def get_product(product_id):
 
 @app.route('/products/<int:product_id>', methods=['PUT'])
 def update_product(product_id):
+    # TODO: Add admin role authorization check
+    user_id = request.headers.get('x-user-id')
+    if not user_id:
+        return jsonify({'message': 'User ID is missing!'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found or invalid ID!'}), 401
+
     try:
         product = Product.query.get_or_404(product_id)
         data = request.get_json()
@@ -122,6 +140,15 @@ def update_product(product_id):
 
 @app.route('/products/<int:product_id>', methods=['DELETE'])
 def delete_product(product_id):
+    # TODO: Add admin role authorization check
+    user_id = request.headers.get('x-user-id')
+    if not user_id:
+        return jsonify({'message': 'User ID is missing!'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found or invalid ID!'}), 401
+
     product = Product.query.get_or_404(product_id)
     db.session.delete(product)
     db.session.commit()
