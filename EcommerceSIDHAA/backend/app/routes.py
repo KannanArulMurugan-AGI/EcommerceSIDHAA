@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from app import app, db
 from app.models import User, Product
-from app.utils import generate_token, token_required
+# No utils needed for now
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -34,16 +34,22 @@ def login():
     if not user or not user.check_password(data['password']):
         return jsonify({'message': 'Invalid credentials'}), 401
 
-    token = generate_token(user.id)
-    return jsonify({'token': token}), 200
+    return jsonify({'user_id': user.id}), 200
 
 
-@app.route('/profile')
-@token_required
-def profile(current_user):
+@app.route('/profile', methods=['GET'])
+def profile():
+    user_id = request.headers.get('x-user-id')
+    if not user_id:
+        return jsonify({'message': 'User ID is missing!'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found!'}), 404
+
     return jsonify({
-        'username': current_user.username,
-        'email': current_user.email
+        'username': user.username,
+        'email': user.email
     })
 
 
