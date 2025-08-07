@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from app import app, db
-from app.models import User, Product
+from app.models import User, Product, Cart, CartItem
 # No utils needed for now
 
 @app.route('/register', methods=['POST'])
@@ -127,3 +127,126 @@ def delete_product(product_id):
     db.session.commit()
 
     return jsonify({'message': 'Product deleted successfully'})
+
+
+@app.route('/cart', methods=['GET'])
+def get_cart():
+    user_id = request.headers.get('x-user-id')
+    if not user_id:
+        return jsonify({'message': 'User ID is missing!'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found!'}), 404
+
+    cart = user.cart
+    if not cart:
+        return jsonify({'items': [], 'total': 0})
+
+    output = []
+    total = 0
+    for item in cart.items:
+        item_data = {
+            'id': item.id,
+            'product_id': item.product_id,
+            'name': item.product.name,
+            'price': item.product.price,
+            'quantity': item.quantity
+        }
+        output.append(item_data)
+        total += item.product.price * item.quantity
+
+    return jsonify({'items': output, 'total': total})
+
+
+@app.route('/cart/add', methods=['POST'])
+def add_to_cart():
+    user_id = request.headers.get('x-user-id')
+    if not user_id:
+        return jsonify({'message': 'User ID is missing!'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found!'}), 404
+
+    data = request.get_json()
+    if not data or not 'product_id' in data or not 'quantity' in data:
+        return jsonify({'message': 'Missing data'}), 400
+
+    product_id = data['product_id']
+    quantity = data['quantity']
+
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify({'message': 'Product not found!'}), 404
+
+    cart = user.cart
+    if not cart:
+        cart = Cart(user_id=user.id)
+        db.session.add(cart)
+
+    cart_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product.id).first()
+    if cart_item:
+        cart_item.quantity += quantity
+    else:
+        cart_item = CartItem(cart_id=cart.id, product_id=product.id, quantity=quantity)
+        db.session.add(cart_item)
+
+    db.session.commit()
+    return jsonify({'message': 'Item added to cart successfully'})
+
+
+@app.route('/cart/update/<int:product_id>', methods=['PUT'])
+def update_cart_item(product_id):
+    user_id = request.headers.get('x-user-id')
+    if not user_id:
+        return jsonify({'message': 'User ID is missing!'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found!'}), 404
+
+    cart = user.cart
+    if not cart:
+        return jsonify({'message': 'Cart not found!'}), 404
+
+    cart_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+    if not cart_item:
+        return jsonify({'message': 'Item not in cart!'}), 404
+
+    data = request.get_json()
+    if not data or not 'quantity' in data:
+        return jsonify({'message': 'Missing quantity'}), 400
+
+    quantity = data['quantity']
+    if quantity <= 0:
+        db.session.delete(cart_item)
+    else:
+        cart_item.quantity = quantity
+
+    db.session.commit()
+    return jsonify({'message': 'Cart updated successfully'})
+
+
+@app.route('/cart/remove/<int:product_id>', methods=['DELETE'])
+def remove_from_cart(product_id):
+    user_id = request.headers.get('x-user-id')
+    if not user_id:
+        return jsonify({'message': 'User ID is missing!'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found!'}), 404
+
+    cart = user.cart
+    if not cart:
+        return jsonify({'message': 'Cart not found!'}), 404
+
+    cart_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+    if not cart_item:
+        return jsonify({'message': 'Item not in cart!'}), 404
+
+    db.session.delete(cart_item)
+    db.session.commit()
+
+    return jsonify({'message': 'Item removed from cart successfully'})
