@@ -1,6 +1,7 @@
 from flask import request, jsonify
 from app import app, db
-from app.models import User
+from app.models import User, Product
+from app.utils import generate_token, token_required
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -33,4 +34,90 @@ def login():
     if not user or not user.check_password(data['password']):
         return jsonify({'message': 'Invalid credentials'}), 401
 
-    return jsonify({'message': 'Login successful'}), 200
+    token = generate_token(user.id)
+    return jsonify({'token': token}), 200
+
+
+@app.route('/profile')
+@token_required
+def profile(current_user):
+    return jsonify({
+        'username': current_user.username,
+        'email': current_user.email
+    })
+
+
+@app.route('/products', methods=['POST'])
+def create_product():
+    data = request.get_json()
+    if not data or not 'name' in data or not 'price' in data:
+        return jsonify({'message': 'Missing data'}), 400
+
+    product = Product(
+        name=data['name'],
+        description=data.get('description', ''),
+        price=data['price'],
+        image_url=data.get('image_url', '')
+    )
+    db.session.add(product)
+    db.session.commit()
+
+    return jsonify({'message': 'Product created successfully'}), 201
+
+
+@app.route('/products', methods=['GET'])
+def get_products():
+    products = Product.query.all()
+    output = []
+    for product in products:
+        product_data = {
+            'id': product.id,
+            'name': product.name,
+            'description': product.description,
+            'price': product.price,
+            'image_url': product.image_url
+        }
+        output.append(product_data)
+
+    return jsonify({'products': output})
+
+
+@app.route('/products/<int:product_id>', methods=['GET'])
+def get_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    product_data = {
+        'id': product.id,
+        'name': product.name,
+        'description': product.description,
+        'price': product.price,
+        'image_url': product.image_url
+    }
+    return jsonify({'product': product_data})
+
+
+@app.route('/products/<int:product_id>', methods=['PUT'])
+def update_product(product_id):
+    try:
+        product = Product.query.get_or_404(product_id)
+        data = request.get_json()
+
+        product.name = data.get('name', product.name)
+        product.description = data.get('description', product.description)
+        product.price = data.get('price', product.price)
+        product.image_url = data.get('image_url', product.image_url)
+
+        db.session.commit()
+
+        return jsonify({'message': 'Product updated successfully'})
+    except Exception as e:
+        app.logger.error(f"Error updating product: {e}")
+        return jsonify({'message': 'Internal server error'}), 500
+
+
+@app.route('/products/<int:product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    db.session.delete(product)
+    db.session.commit()
+
+    return jsonify({'message': 'Product deleted successfully'})
