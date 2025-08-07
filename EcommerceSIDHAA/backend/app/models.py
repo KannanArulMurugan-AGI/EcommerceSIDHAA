@@ -5,6 +5,7 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
+    cart = db.relationship('Cart', backref='user', uselist=False)
 
     def set_password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
@@ -29,3 +30,23 @@ class Product(db.Model):
 
     def __repr__(self):
         return f'<Product {self.name}>'
+
+
+class Cart(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    items = db.relationship('CartItem', backref='cart', lazy=True)
+
+    def __repr__(self):
+        return f'<Cart {self.id}>'
+
+
+class CartItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cart_id = db.Column(db.Integer, db.ForeignKey('cart.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    product = db.relationship('Product')
+
+    def __repr__(self):
+        return f'<CartItem {self.id}>'
