@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from app import app, db
-from app.models import User, Product, Cart, CartItem
+from app.models import User, Product, Cart, CartItem, Order, OrderItem
 # No utils needed for now
 
 @app.route('/register', methods=['POST'])
@@ -277,3 +277,76 @@ def remove_from_cart(product_id):
     db.session.commit()
 
     return jsonify({'message': 'Item removed from cart successfully'})
+
+
+@app.route('/orders/create', methods=['POST'])
+def create_order():
+    user_id = request.headers.get('x-user-id')
+    if not user_id:
+        return jsonify({'message': 'User ID is missing!'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found!'}), 404
+
+    cart = user.cart
+    if not cart or not cart.items:
+        return jsonify({'message': 'Cart is empty!'}), 400
+
+    total_price = 0
+    for item in cart.items:
+        total_price += item.product.price * item.quantity
+
+    order = Order(user_id=user.id, total_price=total_price)
+    db.session.add(order)
+    db.session.commit() # Commit to get the order ID
+
+    for item in cart.items:
+        order_item = OrderItem(
+            order_id=order.id,
+            product_id=item.product_id,
+            quantity=item.quantity,
+            price=item.product.price
+        )
+        db.session.add(order_item)
+
+    # Clear the cart
+    for item in cart.items:
+        db.session.delete(item)
+
+    db.session.delete(cart)
+    db.session.commit()
+
+    return jsonify({'message': 'Order created successfully', 'order_id': order.id}), 201
+
+
+@app.route('/orders', methods=['GET'])
+def get_orders():
+    user_id = request.headers.get('x-user-id')
+    if not user_id:
+        return jsonify({'message': 'User ID is missing!'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found!'}), 404
+
+    orders = user.orders
+    output = []
+    for order in orders:
+        order_data = {
+            'id': order.id,
+            'created_at': order.created_at,
+            'total_price': order.total_price,
+            'items': []
+        }
+        for item in order.items:
+            item_data = {
+                'product_id': item.product_id,
+                'name': item.product.name,
+                'quantity': item.quantity,
+                'price': item.price
+            }
+            order_data['items'].append(item_data)
+        output.append(order_data)
+
+    return jsonify({'orders': output})
