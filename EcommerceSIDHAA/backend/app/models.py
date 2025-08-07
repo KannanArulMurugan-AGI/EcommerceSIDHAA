@@ -12,5 +12,20 @@ class User(db.Model):
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash, password)
 
+    @classmethod
+    def get_by_id(cls, user_id):
+        return cls.query.get(user_id)
+
     def __repr__(self):
         return f'<User {self.username}>'
+
+
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    image_url = db.Column(db.String(255))
+
+    def __repr__(self):
+        return f'<Product {self.name}>'
