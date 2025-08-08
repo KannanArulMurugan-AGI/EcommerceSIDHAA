@@ -288,3 +288,50 @@ def remove_from_cart(product_id):
     db.session.commit()
 
     return jsonify({'message': 'Item removed from cart successfully'})
+
+
+@app.route('/profile', methods=['PUT'])
+def update_profile():
+    user_id = request.headers.get('x-user-id')
+    if not user_id:
+        return jsonify({'message': 'User ID is missing!'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found!'}), 404
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'message': 'Missing data'}), 400
+
+    # Add validation for email format and username uniqueness if desired
+    if 'username' in data:
+        user.username = data['username']
+    if 'email' in data:
+        user.email = data['email']
+
+    db.session.commit()
+    return jsonify({'message': 'Profile updated successfully'})
+
+
+@app.route('/profile/change-password', methods=['POST'])
+def change_password():
+    user_id = request.headers.get('x-user-id')
+    if not user_id:
+        return jsonify({'message': 'User ID is missing!'}), 401
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found!'}), 404
+
+    data = request.get_json()
+    if not data or 'old_password' not in data or 'new_password' not in data:
+        return jsonify({'message': 'Missing data'}), 400
+
+    if not user.check_password(data['old_password']):
+        return jsonify({'message': 'Invalid old password'}), 401
+
+    user.set_password(data['new_password'])
+    db.session.commit()
+
+    return jsonify({'message': 'Password updated successfully'})

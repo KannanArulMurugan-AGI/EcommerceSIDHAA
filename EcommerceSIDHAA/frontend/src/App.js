@@ -8,6 +8,7 @@ import ProductDetailPage from './pages/ProductDetailPage'; // Import the new com
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import CartPage from './pages/CartPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </main>
       <Footer />
