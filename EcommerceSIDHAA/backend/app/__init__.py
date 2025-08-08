@@ -29,5 +29,3 @@ app.logger.addHandler(file_handler)
 app.logger.setLevel(logging.INFO)
 app.logger.info('E-commerce startup')
 
-with app.app_context():
-    db.create_all()
