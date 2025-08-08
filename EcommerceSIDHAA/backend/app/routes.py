@@ -234,11 +234,15 @@ def remove_from_cart(product_id):
     return jsonify({'message': 'Item removed from cart successfully'})
 
 
-@app.route('/orders/create', methods=['POST'])
+@app.route('/checkout', methods=['POST'])
 @jwt_required()
-def create_order():
+def checkout():
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
+
+    data = request.get_json()
+    if not data or not 'shipping_address' in data or not 'shipping_city' in data or not 'shipping_postal_code' in data or not 'shipping_country' in data:
+        return jsonify({'message': 'Shipping information is missing!'}), 400
 
     cart = user.cart
     if not cart or not cart.items:
@@ -248,9 +252,16 @@ def create_order():
     for item in cart.items:
         total_price += item.product.price * item.quantity
 
-    order = Order(user_id=user.id, total_price=total_price)
+    order = Order(
+        user_id=user.id,
+        total_price=total_price,
+        shipping_address=data['shipping_address'],
+        shipping_city=data['shipping_city'],
+        shipping_postal_code=data['shipping_postal_code'],
+        shipping_country=data['shipping_country']
+    )
     db.session.add(order)
-    db.session.flush() # Use flush to get the order id before commit
+    db.session.flush()
 
     for item in cart.items:
         order_item = OrderItem(
@@ -268,7 +279,7 @@ def create_order():
     db.session.delete(cart)
     db.session.commit()
 
-    return jsonify({'message': 'Order created successfully', 'order_id': order.id}), 201
+    return jsonify({'message': 'Checkout successful, order created', 'order_id': order.id}), 201
 
 
 @app.route('/orders', methods=['GET'])

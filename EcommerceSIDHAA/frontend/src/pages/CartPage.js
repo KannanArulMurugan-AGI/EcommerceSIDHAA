@@ -53,13 +53,8 @@ const CartPage = () => {
     }
   };
 
-  const checkoutHandler = async () => {
-    try {
-      await axios.post('/api/orders/create', {});
-      navigate('/orders');
-    } catch (err) {
-      setError('Failed to create order');
-    }
+  const checkoutHandler = () => {
+    navigate('/checkout');
   };
 
   return (

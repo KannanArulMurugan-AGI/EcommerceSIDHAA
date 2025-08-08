@@ -58,6 +58,10 @@ class Order(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
     total_price = db.Column(db.Float, nullable=False)
+    shipping_address = db.Column(db.String(255), nullable=False)
+    shipping_city = db.Column(db.String(120), nullable=False)
+    shipping_postal_code = db.Column(db.String(20), nullable=False)
+    shipping_country = db.Column(db.String(120), nullable=False)
     items = db.relationship('OrderItem', backref='order', lazy=True)
 
     def __repr__(self):
