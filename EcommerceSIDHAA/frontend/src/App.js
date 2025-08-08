@@ -11,6 +11,7 @@ import ProfilePage from './pages/ProfilePage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
 import CheckoutPage from './pages/CheckoutPage';
+import SearchResultsPage from './pages/SearchResultsPage';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/search" element={<SearchResultsPage />} />
         </Routes>
       </main>
       <Footer />

@@ -1,4 +1,5 @@
 from flask import request, jsonify
+from sqlalchemy import or_
 from app import app, db
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.models import User, Product, Cart, CartItem, Order, OrderItem
@@ -71,6 +72,34 @@ def create_product():
 @app.route('/products', methods=['GET'])
 def get_products():
     products = Product.query.all()
+    output = []
+    for product in products:
+        product_data = {
+            'id': product.id,
+            'name': product.name,
+            'description': product.description,
+            'price': product.price,
+            'image_url': product.image_url
+        }
+        output.append(product_data)
+
+    return jsonify({'products': output})
+
+
+@app.route('/products/search', methods=['GET'])
+def search_products():
+    query = request.args.get('q', '')
+    if not query:
+        return jsonify({'products': []})
+
+    search_term = f"%{query}%"
+    products = Product.query.filter(
+        or_(
+            Product.name.ilike(search_term),
+            Product.description.ilike(search_term)
+        )
+    ).all()
+
     output = []
     for product in products:
         product_data = {

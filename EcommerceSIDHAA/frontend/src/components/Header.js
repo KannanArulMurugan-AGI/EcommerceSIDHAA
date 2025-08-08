@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import SearchBar from './SearchBar';
 
 const Header = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -32,6 +33,7 @@ const Header = () => {
           )}
         </ul>
       </nav>
+      <SearchBar />
     </header>
   );
 };
