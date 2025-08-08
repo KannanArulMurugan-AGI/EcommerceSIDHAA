@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const CartPage = () => {
   const [cart, setCart] = useState({ items: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const fetchCart = useCallback(async () => {
     if (!isAuthenticated) {
@@ -69,6 +70,20 @@ const CartPage = () => {
     }
   };
 
+  const checkoutHandler = async () => {
+    try {
+      const config = {
+        headers: {
+          'x-user-id': user.userId,
+        },
+      };
+      await axios.post('http://127.0.0.1:5000/orders/create', {}, config);
+      navigate('/orders');
+    } catch (err) {
+      setError('Failed to create order');
+    }
+  };
+
   return (
     <div>
       <h1>Shopping Cart</h1>
@@ -98,6 +113,7 @@ const CartPage = () => {
             </div>
           ))}
           <h2>Total: ${cart.total}</h2>
+          <button onClick={checkoutHandler}>Proceed to Checkout</button>
         </div>
       )}
     </div>
