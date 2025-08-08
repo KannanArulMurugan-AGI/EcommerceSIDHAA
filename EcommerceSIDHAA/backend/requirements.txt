@@ -4,3 +4,4 @@ Flask-Migrate
 Flask-Bcrypt
 python-dotenv
 gunicorn
+Flask-JWT-Extended

@@ -19,7 +19,7 @@ const LoginPage = () => {
         email,
         password,
       });
-      login({ userId: data.user_id });
+      login(data.access_token);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');

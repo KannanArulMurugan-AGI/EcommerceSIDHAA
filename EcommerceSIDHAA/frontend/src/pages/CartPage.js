@@ -7,7 +7,7 @@ const CartPage = () => {
   const [cart, setCart] = useState({ items: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const fetchCart = useCallback(async () => {
@@ -19,19 +19,14 @@ const CartPage = () => {
 
     try {
       setLoading(true);
-      const config = {
-        headers: {
-          'x-user-id': user.userId,
-        },
-      };
-      const { data } = await axios.get('/api/cart', config);
+      const { data } = await axios.get('/api/cart');
       setCart(data);
       setLoading(false);
     } catch (err) {
       setError('Failed to fetch cart');
       setLoading(false);
     }
-  }, [user, isAuthenticated]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     fetchCart();
@@ -39,16 +34,9 @@ const CartPage = () => {
 
   const updateQuantityHandler = async (productId, quantity) => {
     try {
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.userId,
-        },
-      };
       await axios.put(
         `/api/cart/update/${productId}`,
-        { quantity },
-        config
+        { quantity }
       );
       fetchCart(); // Refetch cart to show updated state
     } catch (err) {
@@ -58,12 +46,7 @@ const CartPage = () => {
 
   const removeFromCartHandler = async (productId) => {
     try {
-      const config = {
-        headers: {
-          'x-user-id': user.userId,
-        },
-      };
-      await axios.delete(`/api/cart/remove/${productId}`, config);
+      await axios.delete(`/api/cart/remove/${productId}`);
       fetchCart(); // Refetch cart
     } catch (err) {
       setError('Failed to remove item from cart');
@@ -72,12 +55,7 @@ const CartPage = () => {
 
   const checkoutHandler = async () => {
     try {
-      const config = {
-        headers: {
-          'x-user-id': user.userId,
-        },
-      };
-      await axios.post('/api/orders/create', {}, config);
+      await axios.post('/api/orders/create', {});
       navigate('/orders');
     } catch (err) {
       setError('Failed to create order');

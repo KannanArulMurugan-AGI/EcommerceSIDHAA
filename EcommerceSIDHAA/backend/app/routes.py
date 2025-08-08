@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from app import app, db
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.models import User, Product, Cart, CartItem, Order, OrderItem
-# No utils needed for now
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -34,18 +34,15 @@ def login():
     if not user or not user.check_password(data['password']):
         return jsonify({'message': 'Invalid credentials'}), 401
 
-    return jsonify({'user_id': user.id}), 200
+    access_token = create_access_token(identity=str(user.id))
+    return jsonify(access_token=access_token)
 
 
 @app.route('/profile', methods=['GET'])
+@jwt_required()
 def profile():
-    user_id = request.headers.get('x-user-id')
-    if not user_id:
-        return jsonify({'message': 'User ID is missing!'}), 401
-
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({'message': 'User not found!'}), 404
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
 
     return jsonify({
         'username': user.username,
@@ -130,18 +127,14 @@ def delete_product(product_id):
 
 
 @app.route('/cart', methods=['GET'])
+@jwt_required()
 def get_cart():
-    user_id = request.headers.get('x-user-id')
-    if not user_id:
-        return jsonify({'message': 'User ID is missing!'}), 401
-
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({'message': 'User not found!'}), 404
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
 
     cart = user.cart
     if not cart:
-        return jsonify({'items': [], 'total': 0})
+        return jsonify({"items": [], "total": 0})
 
     output = []
     total = 0
@@ -160,14 +153,10 @@ def get_cart():
 
 
 @app.route('/cart/add', methods=['POST'])
+@jwt_required()
 def add_to_cart():
-    user_id = request.headers.get('x-user-id')
-    if not user_id:
-        return jsonify({'message': 'User ID is missing!'}), 401
-
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({'message': 'User not found!'}), 404
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
 
     data = request.get_json()
     if not data or not 'product_id' in data or not 'quantity' in data:
@@ -184,6 +173,7 @@ def add_to_cart():
     if not cart:
         cart = Cart(user_id=user.id)
         db.session.add(cart)
+        db.session.flush() # Use flush to get the cart id before commit
 
     cart_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product.id).first()
     if cart_item:
@@ -197,14 +187,10 @@ def add_to_cart():
 
 
 @app.route('/cart/update/<int:product_id>', methods=['PUT'])
+@jwt_required()
 def update_cart_item(product_id):
-    user_id = request.headers.get('x-user-id')
-    if not user_id:
-        return jsonify({'message': 'User ID is missing!'}), 401
-
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({'message': 'User not found!'}), 404
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
 
     cart = user.cart
     if not cart:
@@ -229,14 +215,10 @@ def update_cart_item(product_id):
 
 
 @app.route('/cart/remove/<int:product_id>', methods=['DELETE'])
+@jwt_required()
 def remove_from_cart(product_id):
-    user_id = request.headers.get('x-user-id')
-    if not user_id:
-        return jsonify({'message': 'User ID is missing!'}), 401
-
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({'message': 'User not found!'}), 404
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
 
     cart = user.cart
     if not cart:
@@ -253,14 +235,10 @@ def remove_from_cart(product_id):
 
 
 @app.route('/orders/create', methods=['POST'])
+@jwt_required()
 def create_order():
-    user_id = request.headers.get('x-user-id')
-    if not user_id:
-        return jsonify({'message': 'User ID is missing!'}), 401
-
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({'message': 'User not found!'}), 404
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
 
     cart = user.cart
     if not cart or not cart.items:
@@ -272,7 +250,7 @@ def create_order():
 
     order = Order(user_id=user.id, total_price=total_price)
     db.session.add(order)
-    db.session.commit() # Commit to get the order ID
+    db.session.flush() # Use flush to get the order id before commit
 
     for item in cart.items:
         order_item = OrderItem(
@@ -294,14 +272,10 @@ def create_order():
 
 
 @app.route('/orders', methods=['GET'])
+@jwt_required()
 def get_orders():
-    user_id = request.headers.get('x-user-id')
-    if not user_id:
-        return jsonify({'message': 'User ID is missing!'}), 401
-
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({'message': 'User not found!'}), 404
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
 
     orders = user.orders
     output = []

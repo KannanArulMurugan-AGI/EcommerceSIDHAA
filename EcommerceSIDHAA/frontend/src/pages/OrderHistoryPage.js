@@ -6,7 +6,7 @@ const OrderHistoryPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -17,12 +17,7 @@ const OrderHistoryPage = () => {
       }
 
       try {
-        const config = {
-          headers: {
-            'x-user-id': user.userId,
-          },
-        };
-        const { data } = await axios.get('http://127.0.0.1:5000/orders', config);
+        const { data } = await axios.get('/api/orders');
         setOrders(data.orders);
         setLoading(false);
       } catch (err) {

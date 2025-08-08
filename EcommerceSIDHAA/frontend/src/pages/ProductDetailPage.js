@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -35,17 +35,9 @@ const ProductDetailPage = () => {
     }
 
     try {
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.userId,
-        },
-      };
-
       await axios.post(
         '/api/cart/add',
-        { product_id: product.id, quantity },
-        config
+        { product_id: product.id, quantity }
       );
 
       setMessage('Item added to cart!');
