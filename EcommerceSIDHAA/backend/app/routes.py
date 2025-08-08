@@ -82,7 +82,12 @@ def create_product():
 
 @app.route('/products', methods=['GET'])
 def get_products():
-    products = Product.query.all()
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 8, type=int)
+
+    pagination = Product.query.paginate(page=page, per_page=per_page, error_out=False)
+    products = pagination.items
+
     output = []
     for product in products:
         product_data = {
@@ -94,7 +99,13 @@ def get_products():
         }
         output.append(product_data)
 
-    return jsonify({'products': output})
+    return jsonify({
+        'products': output,
+        'total_pages': pagination.pages,
+        'current_page': pagination.page,
+        'has_next': pagination.has_next,
+        'has_prev': pagination.has_prev
+    })
 
 
 @app.route('/products/<int:product_id>', methods=['GET'])
