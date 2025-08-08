@@ -16,7 +16,7 @@ const RegisterPage = () => {
     setSuccess('');
 
     try {
-      const { data } = await axios.post('http://127.0.0.1:5000/register', {
+      const { data } = await axios.post('/api/register', {
         username,
         email,
         password,

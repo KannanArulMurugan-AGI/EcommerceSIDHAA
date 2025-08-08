@@ -16,7 +16,7 @@ const ProductDetailPage = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const { data } = await axios.get(`http://127.0.0.1:5000/products/${id}`);
+        const { data } = await axios.get(`/api/products/${id}`);
         setProduct(data.product);
         setLoading(false);
       } catch (err) {
@@ -43,7 +43,7 @@ const ProductDetailPage = () => {
       };
 
       await axios.post(
-        'http://127.0.0.1:5000/cart/add',
+        '/api/cart/add',
         { product_id: product.id, quantity },
         config
       );

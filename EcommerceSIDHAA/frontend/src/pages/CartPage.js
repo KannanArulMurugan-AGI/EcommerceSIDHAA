@@ -24,7 +24,7 @@ const CartPage = () => {
           'x-user-id': user.userId,
         },
       };
-      const { data } = await axios.get('http://127.0.0.1:5000/cart', config);
+      const { data } = await axios.get('/api/cart', config);
       setCart(data);
       setLoading(false);
     } catch (err) {
@@ -46,7 +46,7 @@ const CartPage = () => {
         },
       };
       await axios.put(
-        `http://127.0.0.1:5000/cart/update/${productId}`,
+        `/api/cart/update/${productId}`,
         { quantity },
         config
       );
@@ -63,7 +63,7 @@ const CartPage = () => {
           'x-user-id': user.userId,
         },
       };
-      await axios.delete(`http://127.0.0.1:5000/cart/remove/${productId}`, config);
+      await axios.delete(`/api/cart/remove/${productId}`, config);
       fetchCart(); // Refetch cart
     } catch (err) {
       setError('Failed to remove item from cart');
@@ -77,7 +77,7 @@ const CartPage = () => {
           'x-user-id': user.userId,
         },
       };
-      await axios.post('http://127.0.0.1:5000/orders/create', {}, config);
+      await axios.post('/api/orders/create', {}, config);
       navigate('/orders');
     } catch (err) {
       setError('Failed to create order');
